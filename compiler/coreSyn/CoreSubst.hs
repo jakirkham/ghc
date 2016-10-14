@@ -927,8 +927,7 @@ simple_opt_expr subst expr
   where
     in_scope_env = (substInScope subst, simpleUnfoldingFun)
 
-    go (Var v) | isSatCompulsoryUnfolding (idUnfolding v) 0
-               , isAlwaysActive (idInlineActivation v)
+    go (Var v) | isSimpleWrapperUnfolding (idUnfolding v) 0
                =  go (unfoldingTemplate (idUnfolding v))
     go (Var v)          = lookupIdSubst (text "simpleOptExpr") subst v
     go (App e1 e2)      = simple_app subst e1 [go e2]
@@ -1006,7 +1005,8 @@ simple_app subst (Lam b e) (a:as)
     (subst', b') = subst_opt_bndr subst b
     b2 = add_info subst' b b'
 simple_app subst (Var v) as
-  | isSatCompulsoryUnfolding (idUnfolding v) (length as)
+  | isCompulsoryUnfolding (idUnfolding v) ||
+    isSimpleWrapperUnfolding (idUnfolding v) (length as)
   , isAlwaysActive (idInlineActivation v)
   -- See Note [Unfold compulsory unfoldings in LHSs]
   =  simple_app subst (unfoldingTemplate (idUnfolding v)) as

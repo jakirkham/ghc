@@ -57,7 +57,7 @@ module CoreSyn (
         maybeUnfoldingTemplate, otherCons,
         isValueUnfolding, isEvaldUnfolding, isCheapUnfolding,
         isExpandableUnfolding, isConLikeUnfolding, isCompulsoryUnfolding,
-        isSatCompulsoryUnfolding,
+        isSimpleWrapperUnfolding,
         isStableUnfolding, hasStableCoreUnfolding_maybe,
         isClosedUnfolding, hasSomeUnfolding,
         isBootUnfolding,
@@ -1065,6 +1065,12 @@ data UnfoldingSource
                        --
                        -- See Note [InlineRules]
 
+  | InlineWrapper      -- A simple wrapper (e.g. for data constructors). Simple means that
+                       -- it applies in all phases, and the right hand side is simple
+                       -- enough so that it may occur on the LHS of a rule
+                       -- (no case expressions, for example).
+                       -- Such unfolding are applied in the LHS of a rule!
+
   | InlineCompulsory   -- Something that *has* no binding, so you *must* inline it
                        -- Only a few primop-like things have this property
                        -- (see MkId.hs, calls to mkCompulsoryUnfolding).
@@ -1180,6 +1186,7 @@ isStableSource :: UnfoldingSource -> Bool
 -- Keep the unfolding template
 isStableSource InlineCompulsory   = True
 isStableSource InlineStable       = True
+isStableSource InlineWrapper      = True
 isStableSource InlineRhs          = False
 
 -- | Retrieves the template of an unfolding: panics if none is known
@@ -1259,13 +1266,13 @@ isCompulsoryUnfolding :: Unfolding -> Bool
 isCompulsoryUnfolding (CoreUnfolding { uf_src = InlineCompulsory }) = True
 isCompulsoryUnfolding _                                             = False
 
-isSatCompulsoryUnfolding :: Unfolding -> Arity -> Bool
-isSatCompulsoryUnfolding (CoreUnfolding { uf_src = InlineCompulsory, uf_guidance = guidance }) arity
+isSimpleWrapperUnfolding :: Unfolding -> Arity -> Bool
+isSimpleWrapperUnfolding (CoreUnfolding { uf_src = InlineWrapper, uf_guidance = guidance }) arity
     | arity_ok guidance
     = True
   where arity_ok (UnfWhen { ug_arity = ug_arity })  = ug_arity <= arity
         arity_ok _ = True
-isSatCompulsoryUnfolding _ _
+isSimpleWrapperUnfolding _ _
     = False
 
 isStableUnfolding :: Unfolding -> Bool

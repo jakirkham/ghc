@@ -499,7 +499,7 @@ mkSimpleDataConRep wrap_name dc
         -- Somewhat ugly, but there is no code generated for wrappers
         -- for unboxed tuples. Let's just get rid of them as soon as possible.
         | is_unbox_tup = mkCompulsoryUnfolding wrap_rhs
-        | otherwise    = mkCompulsorySatUnfolding wrap_arity wrap_rhs
+        | otherwise    = mkSimpleWrapperUnfolding wrap_arity wrap_rhs
     wrap_sig = mkClosedStrictSig wrap_arg_dmds (dataConCPR dc)
     wrap_arg_dmds = replicate wrap_arity topDmd
     rep_strs = [ NotMarkedStrict | _ <- arg_tys ]

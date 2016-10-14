@@ -1707,6 +1707,11 @@ toIfUnfolding lb (CoreUnfolding { uf_tmpl = rhs
                UnfWhen {ug_arity = arity, ug_unsat_ok = unsat_ok, ug_boring_ok =  boring_ok }
                       -> IfInlineRule arity unsat_ok boring_ok if_rhs
                _other -> IfCoreUnfold True if_rhs
+        InlineWrapper
+          -> case guidance of
+               UnfWhen {ug_arity = arity}
+                      -> IfInlineWrapper arity if_rhs
+               _other -> pprPanic "toIfUnfolding" (ppr src)
         InlineCompulsory -> IfCompulsory if_rhs
         InlineRhs        -> IfCoreUnfold False if_rhs
         -- Yes, even if guidance is UnfNever, expose the unfolding

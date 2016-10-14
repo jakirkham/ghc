@@ -24,7 +24,7 @@ module CoreUnfold (
         mkUnfolding, mkCoreUnfolding,
         mkTopUnfolding, mkSimpleUnfolding, mkWorkerUnfolding,
         mkInlineUnfolding, mkInlinableUnfolding, mkWwInlineRule,
-        mkCompulsoryUnfolding, mkCompulsorySatUnfolding, mkDFunUnfolding,
+        mkCompulsoryUnfolding, mkSimpleWrapperUnfolding, mkDFunUnfolding,
         specUnfolding,
 
         ArgSummary(..),
@@ -125,9 +125,9 @@ mkWorkerUnfolding dflags work_fn
 mkWorkerUnfolding _ _ _ = noUnfolding
 
 -- Inline very early, even in gentle, but only if saturated.
-mkCompulsorySatUnfolding :: Arity -> CoreExpr -> Unfolding
-mkCompulsorySatUnfolding arity expr
-  = mkCoreUnfolding InlineCompulsory True
+mkSimpleWrapperUnfolding :: Arity -> CoreExpr -> Unfolding
+mkSimpleWrapperUnfolding arity expr
+  = mkCoreUnfolding InlineWrapper True
                     (simpleOptExpr expr)
                     (UnfWhen { ug_arity = arity
                              , ug_unsat_ok = False

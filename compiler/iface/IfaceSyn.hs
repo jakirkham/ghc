@@ -309,6 +309,8 @@ data IfaceUnfolding
 
   | IfCompulsory IfaceExpr      -- Only used for default methods, in fact
 
+  | IfInlineWrapper Arity IfaceExpr -- Only used for default methods, in fact
+
   | IfInlineRule Arity          -- INLINE pragmas
                  Bool           -- OK to inline even if *un*-saturated
                  Bool           -- OK to inline even if context is boring
@@ -1122,6 +1124,7 @@ instance Outputable IfaceInfoItem where
 
 instance Outputable IfaceUnfolding where
   ppr (IfCompulsory e)     = text "<compulsory>" <+> parens (ppr e)
+  ppr (IfInlineWrapper a e) = text "<wrapper>" <+> ppr a <+> parens (ppr e)
   ppr (IfCoreUnfold s e)   = (if s
                                 then text "<stable>"
                                 else Outputable.empty)
@@ -1339,6 +1342,7 @@ freeNamesItem _              = emptyNameSet
 freeNamesIfUnfold :: IfaceUnfolding -> NameSet
 freeNamesIfUnfold (IfCoreUnfold _ e)     = freeNamesIfExpr e
 freeNamesIfUnfold (IfCompulsory e)       = freeNamesIfExpr e
+freeNamesIfUnfold (IfInlineWrapper _ e)       = freeNamesIfExpr e
 freeNamesIfUnfold (IfInlineRule _ _ _ e) = freeNamesIfExpr e
 freeNamesIfUnfold (IfDFunUnfold bs es)   = freeNamesIfBndrs bs &&& fnList freeNamesIfExpr es
 
@@ -1808,6 +1812,10 @@ instance Binary IfaceUnfolding where
     put_ bh (IfCompulsory e) = do
         putByte bh 3
         put_ bh e
+    put_ bh (IfInlineWrapper a e) = do
+        putByte bh 4
+        put_ bh a
+        put_ bh e
     get bh = do
         h <- getByte bh
         case h of
@@ -1822,8 +1830,11 @@ instance Binary IfaceUnfolding where
             2 -> do as <- get bh
                     bs <- get bh
                     return (IfDFunUnfold as bs)
-            _ -> do e <- get bh
+            3 -> do e <- get bh
                     return (IfCompulsory e)
+            _ -> do a <- get bh
+                    e <- get bh
+                    return (IfInlineWrapper a e)
 
 
 instance Binary IfaceExpr where

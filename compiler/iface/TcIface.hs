@@ -1291,6 +1291,12 @@ tcUnfolding name _ _ (IfCompulsory if_expr)
                     Nothing   -> NoUnfolding
                     Just expr -> mkCompulsoryUnfolding expr) }
 
+tcUnfolding name _ _ (IfInlineWrapper arity if_expr)
+  = do  { mb_expr <- tcPragExpr name if_expr
+        ; return (case mb_expr of
+                    Nothing   -> NoUnfolding
+                    Just expr -> mkSimpleWrapperUnfolding arity expr) }
+
 tcUnfolding name _ _ (IfInlineRule arity unsat_ok boring_ok if_expr)
   = do  { mb_expr <- tcPragExpr name if_expr
         ; return (case mb_expr of

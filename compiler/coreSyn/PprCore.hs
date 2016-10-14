@@ -490,6 +490,7 @@ instance Outputable UnfoldingGuidance where
 instance Outputable UnfoldingSource where
   ppr InlineCompulsory  = text "Compulsory"
   ppr InlineStable      = text "InlineStable"
+  ppr InlineWrapper     = text "Wrapper"
   ppr InlineRhs         = text "<vanilla>"
 
 instance Outputable Unfolding where
